@@ -15,6 +15,7 @@ from database import (
     create_user, delete_user, toggle_user_active,
     update_password, upsert_admin,
     get_user_api_keys, save_api_key, delete_api_key,
+    increment_generation_count, set_user_permanent, reset_user_trial,
 )
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -137,8 +138,11 @@ async def login(request: Request):
             raise
         except Exception:
             pass
-    token = make_token(user["id"], user["email"], user["role"], trial_exp)
-    return {"token": token, "email": user["email"], "role": user["role"], "trial_expires_at": trial_exp}
+    token   = make_token(user["id"], user["email"], user["role"], trial_exp)
+    gen_info = {}
+    if trial_exp:
+        gen_info = {"gens_used": user.get("generation_count") or 0, "gens_limit": 10}
+    return {"token": token, "email": user["email"], "role": user["role"], "trial_expires_at": trial_exp, **gen_info}
 
 # ── Admin endpoints ───────────────────────────────────────────────────────────
 @app.get("/admin/users")
@@ -189,6 +193,18 @@ async def admin_reset_password(user_id: int, request: Request):
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     update_password(user_id, hash_pw(password))
     return {"message": "Password updated"}
+
+@app.put("/admin/users/{user_id}/set-permanent")
+async def admin_set_permanent(user_id: int, request: Request):
+    await get_admin(request)
+    set_user_permanent(user_id)
+    return {"message": "User set to permanent"}
+
+@app.put("/admin/users/{user_id}/reset-trial")
+async def admin_reset_trial_ep(user_id: int, request: Request):
+    await get_admin(request)
+    reset_user_trial(user_id)
+    return {"message": "Trial reset — 24h + 10 gens"}
 
 # ── User API key endpoints ────────────────────────────────────────────────────
 @app.get("/user/api-keys")
@@ -242,7 +258,7 @@ PLATFORM_NOTES = {
     "YouTube Shorts":    "Under 60 seconds. Instant hook. No intros. Pure dopamine. Fast cuts.",
     "Instagram Reel":    "Under 90 seconds. Hook in 1 second. Vertical. Aesthetic-first. Trend-aware.",
     "TikTok":            "Under 3 minutes. Native TikTok energy. Sound-first. Pattern interrupt every 5s.",
-    "Commercial Ad":     "Paid ad. Every second costs money. Pain in 2s. Hope in 3s. CTA at end.",
+    "Commercial Ad":     "Paid advertisement. Every second costs money. Pain in 2s. Solution in 3s. Strong purchase/signup CTA at end. NO subscribe/like/comment language — this is a sales conversion ad.",
 }
 
 VIDEO_LENGTH_WORD_COUNTS = {
@@ -256,11 +272,26 @@ VIDEO_LENGTH_WORD_COUNTS = {
 }
 
 
-def build_prompt(niche, audience, platform, emotion, topic, ad_length, video_length):
+def build_prompt(niche, audience, platform, emotion, topic, ad_length, video_length, language="English"):
     platform_note = PLATFORM_NOTES.get(platform, "")
     ad_note       = f"Ad length: {ad_length}." if ad_length else ""
     word_count    = VIDEO_LENGTH_WORD_COUNTS.get(video_length, 650)
     script_note   = f"The full_complete_script must be approximately {word_count} words — enough for a real {video_length} video."
+    language_note = f"OUTPUT LANGUAGE: Write ALL content — titles, scripts, copy, hooks, CTAs, descriptions — in {language}. Adapt cultural references, idioms, humor, and emotional triggers to resonate authentically with native {language} speakers."
+
+    commercial_override = ""
+    if platform == "Commercial Ad":
+        commercial_override = f"""
+AD MODE — OVERRIDE RULES (apply to ALL sections):
+- This is a PAID ADVERTISEMENT, not a YouTube video. NEVER use subscribe/like/follow/comment language.
+- Every section must serve ONE goal: conversion (purchase, sign-up, booking, free trial, etc.)
+- section7_voiceover.full_complete_script = complete word-for-word {ad_length} AD PRODUCTION SCRIPT with [SCENE], [VO], [ON SCREEN], [CTA] markers. Written exactly as an agency-ready production script.
+- section10_comment_triggers → rewrite as 3 conversion CTAs (urgency, social proof, offer-based)
+- section11_binge_strategy → rewrite as retargeting + ad sequencing strategy (cold → warm → hot audience)
+- section12_shorts_strategy → rewrite as ad format variations (static image, carousel, story, reel versions)
+- All hooks end with desire or curiosity, not "subscribe for more"
+- Closing CTA must be specific and urgent: include an offer, deadline, or scarcity element
+"""
 
     instagram_section = ""
     if platform == "Commercial Ad":
@@ -286,7 +317,8 @@ NICHE: {niche}
 TARGET AUDIENCE: {audience}
 LEAD EMOTION: {emotion}
 SPECIFIC TOPIC: {topic or "Choose the most viral angle for this niche"}
-
+{language_note}
+{commercial_override}
 {script_note}
 
 Return this EXACT JSON (all fields required, be specific and detailed for this niche):
@@ -480,6 +512,7 @@ class GenerateRequest(BaseModel):
     video_length:    str   = "8 minutes"
     topic:           Optional[str] = None
     ad_length:       Optional[str] = None
+    language:        str   = "English"
     api_provider:    str   = "groq"
     model:           str   = "llama-3.3-70b-versatile"
 
@@ -564,6 +597,20 @@ async def generate(request: Request):
     api_key  = body.pop("api_key", "").strip()
     req      = GenerateRequest(**{k: v for k, v in body.items() if k in GenerateRequest.model_fields})
 
+    # Generation limit: free/trial users max 10
+    is_free_user = False
+    gen_count    = 0
+    if user.get("role") != "admin":
+        db_user = get_user_by_email(user["email"])
+        if db_user and db_user.get("trial_expires_at"):
+            is_free_user = True
+            gen_count    = db_user.get("generation_count") or 0
+            if gen_count >= 10:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Generation limit reached ({gen_count}/10). Contact the admin to upgrade your account."
+                )
+
     # Key priority: request body → user's saved DB key → server GROQ_API_KEY env var
     if not api_key:
         try:
@@ -582,6 +629,7 @@ async def generate(request: Request):
         topic        = req.topic or "",
         ad_length    = req.ad_length or "",
         video_length = req.video_length,
+        language     = req.language,
     )
 
     try:
@@ -590,7 +638,15 @@ async def generate(request: Request):
         else:
             raw = await call_ollama(prompt, req.model)
         data = parse_json(raw)
-        return {"result": data, "platform": req.platform}
+        # Increment count for free users after successful generation
+        if is_free_user:
+            try:
+                increment_generation_count(int(user["sub"]))
+                gen_count += 1
+            except Exception:
+                pass
+        extra = {"gens_used": gen_count, "gens_limit": 10} if is_free_user else {}
+        return {"result": data, "platform": req.platform, **extra}
     except httpx.ConnectError:
         raise HTTPException(status_code=503, detail="Cannot connect. Check API settings.")
     except httpx.HTTPStatusError as e:

@@ -108,6 +108,11 @@ def init_db():
         _commit(conn)
     except Exception:
         pass
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN generation_count INTEGER DEFAULT 0")
+        _commit(conn)
+    except Exception:
+        pass
     conn.execute("""
         CREATE TABLE IF NOT EXISTS api_keys (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -134,7 +139,7 @@ def get_user_by_email(email: str):
 def get_all_users():
     conn = get_db()
     rows = conn.execute(
-        "SELECT id, email, role, active, trial_expires_at, created_at FROM users ORDER BY created_at"
+        "SELECT id, email, role, active, trial_expires_at, generation_count, created_at FROM users ORDER BY created_at"
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
@@ -223,6 +228,35 @@ def delete_api_key(user_id: int, provider: str):
     conn = get_db()
     conn.execute(
         "DELETE FROM api_keys WHERE user_id = ? AND provider = ?", (user_id, provider)
+    )
+    _commit(conn)
+    conn.close()
+
+
+def increment_generation_count(user_id: int):
+    conn = get_db()
+    conn.execute(
+        "UPDATE users SET generation_count = COALESCE(generation_count, 0) + 1 WHERE id = ?",
+        (user_id,)
+    )
+    _commit(conn)
+    conn.close()
+
+
+def set_user_permanent(user_id: int):
+    conn = get_db()
+    conn.execute("UPDATE users SET trial_expires_at = NULL WHERE id = ?", (user_id,))
+    _commit(conn)
+    conn.close()
+
+
+def reset_user_trial(user_id: int):
+    import datetime as _dt
+    trial_expires_at = (_dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(hours=24)).isoformat()
+    conn = get_db()
+    conn.execute(
+        "UPDATE users SET trial_expires_at = ?, generation_count = 0 WHERE id = ?",
+        (trial_expires_at, user_id)
     )
     _commit(conn)
     conn.close()

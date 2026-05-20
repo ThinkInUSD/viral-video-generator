@@ -240,6 +240,17 @@ a:hover{text-decoration:underline}
 .admin-msg.ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#6ee7b7;display:block}
 .admin-msg.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;display:block}
 
+/* ── LANGUAGE ── */
+.lang-wrap{display:flex;flex-wrap:wrap;gap:.3rem}
+.lang-btn{padding:.3rem .5rem;border:1px solid var(--border);border-radius:7px;background:var(--bg0);color:var(--t2);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.lang-btn:hover{border-color:var(--pink);color:var(--t1)}
+.lang-btn.on{border-color:var(--pink);background:rgba(236,72,153,.12);color:#f9a8d4}
+
+/* ── GEN COUNTER ── */
+.gen-counter{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.55rem .75rem;font-size:.75rem;display:none}
+.gen-bar-wrap{background:var(--bg0);border-radius:999px;height:5px;margin-top:.38rem;overflow:hidden}
+.gen-bar{height:5px;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--gold));transition:width .4s}
+
 /* ── TRIAL BANNER ── */
 .trial-banner{background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(239,68,68,.07));border-bottom:1px solid rgba(245,158,11,.25);padding:.42rem 1.25rem;font-size:.75rem;font-weight:600;color:var(--gold);text-align:center;display:none}
 .trial-banner span.dim{color:var(--t3);font-weight:400;margin-left:.35rem}
@@ -469,6 +480,25 @@ a:hover{text-decoration:underline}
       </div>
     </div>
 
+    <div class="fg">
+      <label>Output Language</label>
+      <div class="lang-wrap">
+        <button class="lang-btn on" data-lang="English"    onclick="pickLang(this)">🇺🇸 English</button>
+        <button class="lang-btn"   data-lang="Swahili"    onclick="pickLang(this)">🇹🇿 Swahili</button>
+        <button class="lang-btn"   data-lang="French"     onclick="pickLang(this)">🇫🇷 French</button>
+        <button class="lang-btn"   data-lang="Spanish"    onclick="pickLang(this)">🇪🇸 Spanish</button>
+        <button class="lang-btn"   data-lang="Portuguese" onclick="pickLang(this)">🇧🇷 Portuguese</button>
+        <button class="lang-btn"   data-lang="Arabic"     onclick="pickLang(this)">🇸🇦 Arabic</button>
+        <button class="lang-btn"   data-lang="Hindi"      onclick="pickLang(this)">🇮🇳 Hindi</button>
+        <button class="lang-btn"   data-lang="Chinese"    onclick="pickLang(this)">🇨🇳 Chinese</button>
+      </div>
+    </div>
+
+    <div class="gen-counter" id="genCounter">
+      <span id="genCountText" style="color:var(--t2)">0 / 10 generations used</span>
+      <div class="gen-bar-wrap"><div class="gen-bar" id="genBar" style="width:0%"></div></div>
+    </div>
+
     <div class="fg"><label>AI Model (Groq/Ollama)</label><select id="modelSel"><option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option></select></div>
 
     <button class="gen-btn" id="genBtn" onclick="generate()"><span>&#9889;</span><span id="genTxt">Generate Full System</span></button>
@@ -512,7 +542,7 @@ a:hover{text-decoration:underline}
               <div id="adminMsg" class="admin-msg"></div>
             </div>
             <table class="users-table" id="usersTable">
-              <thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Trial</th><th>Created</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Account</th><th>Gens</th><th>Created</th><th>Actions</th></tr></thead>
               <tbody id="usersTbody"><tr><td colspan="5" style="color:var(--t3);text-align:center;padding:1rem">Loading users...</td></tr></tbody>
             </table>
           </div>
@@ -531,6 +561,7 @@ var G = {
   emotion:   'Hope',
   videoLen:  '8 minutes',
   adLen:     '30s',
+  language:  'English',
   provider:  localStorage.getItem('vf_prov') || 'groq',
   groqKey:   localStorage.getItem('vf_key')  || '',
   token:     localStorage.getItem('vf_token') || '',
@@ -574,6 +605,7 @@ async function doLogin() {
     document.getElementById('userEmail').textContent = G.userEmail;
     var pl = parseJwt(G.token);
     if (pl && pl.trial_exp) setupTrialBanner(pl.trial_exp);
+    if (typeof d.gens_used !== 'undefined') updateGenCounter(d.gens_used, d.gens_limit);
     setupAdminTab();
     loadOllamaModels();
     loadSavedKeys();
@@ -610,6 +642,18 @@ function setupTrialBanner(trialExp) {
   }
   tick();
   setInterval(tick, 60000);
+}
+
+function updateGenCounter(used, limit) {
+  var el = document.getElementById('genCounter');
+  var txt = document.getElementById('genCountText');
+  var bar = document.getElementById('genBar');
+  if (!el) return;
+  el.style.display = '';
+  var pct = Math.min(100, Math.round((used / limit) * 100));
+  txt.innerHTML = '<span style="color:'+(used>=limit?'var(--red)':used>=8?'var(--gold)':'var(--t2)')+'">'+used+' / '+limit+' generations used</span>';
+  bar.style.width = pct + '%';
+  bar.style.background = used >= limit ? 'var(--red)' : used >= 8 ? 'linear-gradient(90deg,var(--gold),var(--red))' : 'linear-gradient(90deg,var(--green),var(--gold))';
 }
 
 function setupAdminTab() {
@@ -782,6 +826,10 @@ function pickAdLen(btn) {
   document.querySelectorAll('.adl-btn').forEach(function(b){ b.classList.remove('on'); });
   btn.classList.add('on'); G.adLen = btn.dataset.len;
 }
+function pickLang(btn) {
+  document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on'); G.language = btn.dataset.lang;
+}
 function switchTab(el) {
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('on'); });
   document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('on'); });
@@ -813,6 +861,7 @@ async function generate() {
       platform: G.platform, emotional_focus: G.emotion,
       video_length: G.videoLen,
       ad_length: G.platform === 'Commercial Ad' ? G.adLen : null,
+      language: G.language,
       api_provider: G.provider, model: model, api_key: G.groqKey,
     };
     var res = await fetch('/api/generate', {
@@ -822,6 +871,7 @@ async function generate() {
     if (!res.ok) { var e = await res.json(); throw new Error(e.detail || 'Failed'); }
     var data = await res.json();
     G.result = data.result;
+    if (typeof data.gens_used !== 'undefined') updateGenCounter(data.gens_used, data.gens_limit);
     renderAll(G.result);
     document.getElementById('expBtn').style.display = '';
     toast('Full system generated!');
@@ -1126,13 +1176,27 @@ async function loadUsers() {
     var tbody = document.getElementById('usersTbody');
     if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--t3);text-align:center;padding:1rem">No users yet</td></tr>'; return; }
     tbody.innerHTML = users.map(function(u){
+      var isPerm = !u.trial_expires_at;
+      var isAdmin = u.role === 'admin';
+      var genText = isAdmin ? '&#8734;' : (isPerm ? '&#8734;' : ((u.generation_count||0)+'/10'));
+      var acctBadge = isAdmin
+        ? '<span style="font-size:.68rem;color:var(--gold)">Admin</span>'
+        : (isPerm
+            ? '<span style="font-size:.68rem;color:var(--green)">Permanent</span>'
+            : '<span style="font-size:.68rem;color:var(--t3)">Free Trial</span>');
+      var permBtn = (!isAdmin && !isPerm)
+        ? '<button class="act-btn" onclick="setUserPermanent('+u.id+')" title="Make permanent (no limits)">Permanent</button>' : '';
+      var resetBtn = (!isAdmin && isPerm)
+        ? '<button class="act-btn" onclick="resetUserTrial('+u.id+')" title="Reset to free trial (24h + 10 gens)">Reset Trial</button>' : '';
       return '<tr>'+
         '<td style="color:var(--t1)">'+esc(u.email)+'</td>'+
         '<td><span class="role-badge role-'+u.role+'">'+u.role+'</span></td>'+
         '<td class="'+(u.active?'status-on':'status-off')+'">'+(u.active?'Active':'Disabled')+'</td>'+
-        '<td>'+trialStatus(u.trial_expires_at)+'</td>'+
+        '<td>'+acctBadge+'</td>'+
+        '<td style="font-size:.75rem;color:var(--t2)">'+genText+'</td>'+
         '<td>'+esc((u.created_at||'').substring(0,10))+'</td>'+
         '<td>'+
+          permBtn+resetBtn+
           '<button class="act-btn" onclick="toggleUser('+u.id+')">'+(u.active?'Disable':'Enable')+'</button>'+
           '<button class="act-btn del" onclick="deleteUser('+u.id+',\''+esc(u.email)+'\')">Delete</button>'+
         '</td>'+
@@ -1172,6 +1236,23 @@ async function deleteUser(id, email) {
 async function toggleUser(id) {
   var res = await fetch('/admin/users/'+id+'/toggle', {method:'PUT', headers: authHeaders()});
   if (res.ok) loadUsers();
+}
+
+async function setUserPermanent(id) {
+  var res = await fetch('/admin/users/'+id+'/set-permanent', {method:'PUT', headers: authHeaders()});
+  var d = await res.json();
+  if (!res.ok) { showAdminMsg(d.detail || 'Error', 'err'); return; }
+  showAdminMsg('User set to permanent — no expiry or gen limits.', 'ok');
+  loadUsers();
+}
+
+async function resetUserTrial(id) {
+  if (!confirm('Reset this user to a fresh 24h free trial (10 gens)?')) return;
+  var res = await fetch('/admin/users/'+id+'/reset-trial', {method:'PUT', headers: authHeaders()});
+  var d = await res.json();
+  if (!res.ok) { showAdminMsg(d.detail || 'Error', 'err'); return; }
+  showAdminMsg('Trial reset — 24h + 10 generations.', 'ok');
+  loadUsers();
 }
 
 function trialStatus(exp) {
