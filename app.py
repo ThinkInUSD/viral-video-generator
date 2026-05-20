@@ -484,7 +484,7 @@ def parse_json(content: str) -> dict:
 async def call_groq(prompt: str, model: str, api_key: str) -> str:
     key = api_key or GROQ_API_KEY
     if not key:
-        raise HTTPException(status_code=401, detail="Groq API key required.")
+        raise HTTPException(status_code=503, detail="No API key configured. Admin: add GROQ_API_KEY in Render environment.")
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     payload = {
         "model": model,
@@ -547,10 +547,15 @@ async def generate(request: Request):
     api_key  = body.pop("api_key", "").strip()
     req      = GenerateRequest(**{k: v for k, v in body.items() if k in GenerateRequest.model_fields})
 
-    # Fall back to user's server-saved key if nothing provided in request
-    if not api_key and req.api_provider in ALLOWED_PROVIDERS:
-        saved   = get_user_api_keys(int(user["sub"]))
-        api_key = saved.get(req.api_provider, "") or ""
+    # Key priority: request body → user's saved DB key → server GROQ_API_KEY env var
+    if not api_key:
+        try:
+            saved   = get_user_api_keys(int(user["sub"]))
+            api_key = saved.get(req.api_provider, "") or ""
+        except Exception:
+            api_key = ""
+    if not api_key:
+        api_key = GROQ_API_KEY  # admin's server-level key used for all users
 
     prompt = build_prompt(
         niche        = req.niche,
