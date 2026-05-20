@@ -422,7 +422,7 @@ a:hover{text-decoration:underline}
 
   <!-- SIDEBAR -->
   <aside class="sb">
-    <div class="formula-pill">
+    <div class="formula-pill" id="formulaPill" style="display:none">
       <div class="feq">
         <span class="fp">PAIN</span><span class="op">+</span><span class="fh">HOPE</span><span class="op">+</span>
         <span class="fpr">PROOF</span><span class="op">+</span><span class="fc">CURIOSITY</span><span class="op">+</span>
@@ -484,7 +484,7 @@ a:hover{text-decoration:underline}
       <div class="tab"     data-tab="visuals"  onclick="switchTab(this)">&#128444; Visuals</div>
       <div class="tab"     data-tab="editing"  onclick="switchTab(this)">&#9986; Editing</div>
       <div class="tab"     data-tab="growth"   onclick="switchTab(this)">&#128200; Growth</div>
-      <div class="tab"     data-tab="formula"  onclick="switchTab(this)">&#9889; Formula</div>
+      <div class="tab" id="formulaTab" data-tab="formula" onclick="switchTab(this)" style="display:none">&#9889; Formula</div>
     </div>
 
     <div class="content">
@@ -616,6 +616,8 @@ function setupAdminTab() {
   document.getElementById('userEmail').textContent = G.userEmail;
   if (G.userRole === 'admin') {
     document.getElementById('apiSettingsBtn').style.display = '';
+    document.getElementById('formulaTab').style.display = '';
+    document.getElementById('formulaPill').style.display = '';
     if (!document.querySelector('.admin-tab')) {
       var t = document.createElement('div');
       t.className = 'tab admin-tab';

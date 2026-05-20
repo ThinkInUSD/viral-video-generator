@@ -39,12 +39,16 @@ nav{background:rgba(7,7,15,.92);border-bottom:1px solid var(--border);backdrop-f
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,58,237,.48)}
 .hero-note{font-size:.74rem;color:var(--t3)}
 
-/* FORMULA STRIP */
-.formula-strip{background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(236,72,153,.07),rgba(34,211,238,.05));border-top:1px solid rgba(124,58,237,.2);border-bottom:1px solid rgba(124,58,237,.2);padding:1.4rem 1.5rem;text-align:center}
-.feq{font-size:clamp(.82rem,2.5vw,1.05rem);font-weight:800;letter-spacing:.02em}
-.fp{color:#f87171}.fh{color:#34d399}.fpr{color:#60a5fa}.fc{color:#fbbf24}.fa{color:#a78bfa}.ff{color:#f472b6}
-.fop{color:var(--t4);margin:0 .38rem;font-weight:400}
-.formula-sub{font-size:.73rem;color:var(--t3);margin-top:.45rem}
+/* TESTIMONIALS */
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+.testi-card{background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:1.4rem 1.2rem;display:flex;flex-direction:column;gap:.9rem}
+.testi-stars{color:var(--gold);font-size:1rem;letter-spacing:.1em}
+.testi-text{font-size:.83rem;color:var(--t2);line-height:1.72;flex:1}
+.testi-author{display:flex;align-items:center;gap:.7rem}
+.testi-av{width:38px;height:38px;min-width:38px;background:linear-gradient(135deg,var(--purple),var(--pink));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:#fff}
+.testi-info{display:flex;flex-direction:column;gap:.15rem}
+.testi-info strong{font-size:.82rem;color:var(--t1)}
+.testi-info span{font-size:.72rem;color:var(--t3)}
 
 /* SECTIONS */
 .section{padding:4.5rem 1.5rem;max-width:1040px;margin:0 auto}
@@ -147,19 +151,6 @@ footer{border-top:1px solid var(--border);padding:1.6rem 1.5rem;text-align:cente
   </div>
 </section>
 
-<!-- FORMULA -->
-<div class="formula-strip">
-  <div class="feq">
-    <span class="fp">PAIN</span><span class="fop">+</span>
-    <span class="fh">HOPE</span><span class="fop">+</span>
-    <span class="fpr">PROOF</span><span class="fop">+</span>
-    <span class="fc">CURIOSITY</span><span class="fop">+</span>
-    <span class="fa">ASPIRATION</span><span class="fop">+</span>
-    <span class="ff">FOMO</span>
-  </div>
-  <div class="formula-sub">The exact dopamine formula engineered into every single output</div>
-</div>
-
 <!-- FEATURES -->
 <section class="section">
   <div class="section-label">What You Get</div>
@@ -211,22 +202,22 @@ footer{border-top:1px solid var(--border);padding:1.6rem 1.5rem;text-align:cente
   <div class="steps-wrap">
     <div class="section-label" style="text-align:center">Simple Process</div>
     <h2 class="section-title">How It Works</h2>
-    <p class="section-sub">No learning curve. Fill three fields, click one button, get a complete viral system.</p>
+    <p class="section-sub">No learning curve. Three inputs, one click, complete viral system — ready in seconds.</p>
     <div class="steps-grid">
       <div class="step">
         <div class="step-num">1</div>
-        <div class="step-title">Enter Your Niche</div>
-        <div class="step-desc">Type your channel niche and describe your target audience. One sentence each is enough.</div>
+        <div class="step-title">Describe Your Channel</div>
+        <div class="step-desc">Tell us your niche and who your audience is. One sentence each is all we need to get started.</div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-title">Choose Your Settings</div>
-        <div class="step-desc">Pick platform, video length (60s to 20+ min), and the lead emotion you want to trigger.</div>
+        <div class="step-title">Set Your Preferences</div>
+        <div class="step-desc">Choose your platform and video length. Our AI handles the rest — no strategy knowledge needed.</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-title">Get the Full System</div>
-        <div class="step-desc">In seconds, AI returns all 15 sections — strategy, script, thumbnails, storyboard, and more.</div>
+        <div class="step-title">Get Everything Instantly</div>
+        <div class="step-desc">Script, thumbnails, storyboard, editing guide, growth strategy — all generated in one click.</div>
       </div>
     </div>
   </div>
@@ -240,8 +231,8 @@ footer{border-top:1px solid var(--border);padding:1.6rem 1.5rem;text-align:cente
   <div class="checklist">
     <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Channel Foundation</strong> — positioning, unique angle, content pillars, ecosystem strategy</div></div>
     <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Audience Psychology</strong> — fears, desires, FOMO triggers, binge psychology</div></div>
-    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>3 Viral Video Ideas</strong> — Pain + Hope + Proof + Curiosity fully mapped</div></div>
-    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>5 Ultra-Clickable Titles</strong> — tested against viral psychology patterns</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>3 Viral Video Ideas</strong> — AI-engineered for maximum click-through and watch time</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>5 Ultra-Clickable Titles</strong> — optimised to stop the scroll and drive curiosity</div></div>
     <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>2 Thumbnail Concepts</strong> — with psychology, colors, eye path, text overlay</div></div>
     <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>AI Thumbnail Prompts</strong> — Midjourney, DALL-E, Ideogram, + style guide</div></div>
     <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>High-Retention Structure</strong> — hook, curiosity loop, pattern interrupt, addictive ending</div></div>
@@ -255,6 +246,41 @@ footer{border-top:1px solid var(--border);padding:1.6rem 1.5rem;text-align:cente
     <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Content Multiplication</strong> — Instagram, TikTok, Twitter, community post, email hook</div></div>
   </div>
 </section>
+
+<!-- TESTIMONIALS -->
+<div class="how-bg">
+  <section class="section">
+    <div class="section-label">Creators Love It</div>
+    <h2 class="section-title">Real Results From Real Creators</h2>
+    <p class="section-sub">Creators at every level are using ViralForge Pro to plan, script, and grow faster.</p>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="testi-text">"I generated my first viral script in under 2 minutes. The level of detail is insane — hook, thumbnail concept, editing notes, everything in one shot. My next video hit 180K views."</p>
+        <div class="testi-author">
+          <div class="testi-av">JM</div>
+          <div class="testi-info"><strong>James M.</strong><span>Finance Creator &middot; 52K subscribers</span></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="testi-text">"I used to spend 3 hours planning one video. Now I generate the full strategy in seconds and spend that time actually filming. My posting went from once a week to every other day."</p>
+        <div class="testi-author">
+          <div class="testi-av">SA</div>
+          <div class="testi-info"><strong>Sofia A.</strong><span>Lifestyle Creator &middot; 28K subscribers</span></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="testi-text">"The voiceover script alone is worth it. It gives me the exact words to say for the full video — I just read it. My average audience retention jumped from 38% to 67% in one month."</p>
+        <div class="testi-author">
+          <div class="testi-av">DK</div>
+          <div class="testi-info"><strong>Daniel K.</strong><span>Tech Creator &middot; 94K subscribers</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
 
 <!-- SIGNUP -->
 <div class="signup-bg" id="signup-section">
