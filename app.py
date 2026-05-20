@@ -262,6 +262,22 @@ def build_prompt(niche, audience, platform, emotion, topic, ad_length, video_len
     word_count    = VIDEO_LENGTH_WORD_COUNTS.get(video_length, 650)
     script_note   = f"The full_complete_script must be approximately {word_count} words — enough for a real {video_length} video."
 
+    instagram_section = ""
+    if platform == "Commercial Ad":
+        instagram_section = f"""  "instagram_ad_creative": {{
+    "ad_headline": "Short punchy headline (max 40 chars) — lead with pain or desire, no filler words",
+    "primary_text": "Ad copy appearing above the creative — open with pain in 1 sentence, follow with hope or benefit, close with urgency or social proof. First 125 chars must hook instantly.",
+    "cta_button": "Exact CTA button label — e.g. Learn More, Shop Now, Sign Up, Get Offer, Book Now",
+    "hook_line": "First 3-second spoken line for this {ad_length} video ad — pattern interrupt, no greeting, instant pain or curiosity",
+    "visual_concept": "What the ad creative shows — scene, subject, emotion, and composition that stops the scroll in 2 seconds",
+    "image_prompt": "DALL-E 3 or Midjourney prompt for the ad creative — photorealistic or cinematic, 4:5 ratio (1080x1350), describe subject, emotion, colors, lighting, and mood in full detail",
+    "story_format": "How to adapt for Instagram Story (9:16, 1080x1920) — headline position, text safe zones, and visual adjustments",
+    "caption": "Full Instagram caption for a boosted organic post — hook opener, pain+solution body, soft CTA, 8-10 niche hashtags",
+    "targeting_notes": "Meta Ads targeting — 3-5 interest categories, demographics, behaviors, and lookalike audience strategy for this niche and audience"
+  }},
+
+"""
+
     return f"""Generate a COMPLETE viral content system for:
 
 PLATFORM: {platform} — {platform_note} {ad_note}
@@ -361,7 +377,8 @@ Return this EXACT JSON (all fields required, be specific and detailed for this n
 
   "thumbnail_ai_prompt": {{
     "midjourney": "Full ready-to-use /imagine prompt for a YouTube thumbnail for this specific video — ultra-detailed, photorealistic or cinematic style, include color, mood, subject, text hint, and --ar 16:9 --v 6.1",
-    "dalle": "Full DALL-E prompt for the same thumbnail — describe the scene, colors, text overlay area, mood, and style",
+    "dalle": "Full DALL-E 3 prompt for the same thumbnail — describe the scene, colors, text overlay area, mood, and style",
+    "chatgpt": "Natural language ChatGPT image prompt (DALL-E 3 via ChatGPT) — write it conversationally as if asking ChatGPT to create the thumbnail. Describe subject, emotion, colors, composition, text to include, and desired mood in plain sentences",
     "ideogram": "Full Ideogram prompt optimized for text-heavy thumbnail with readable bold typography",
     "style_guide": "Visual style guide for the thumbnail: color palette hex codes, fonts, mood, what to avoid"
   }},
@@ -450,7 +467,7 @@ Return this EXACT JSON (all fields required, be specific and detailed for this n
     "email_hook": "Email subject line + first sentence"
   }},
 
-  "section15_master_formula": "The reusable 1-paragraph formula for this niche combining Pain+Hope+Proof+Curiosity+Aspiration+FOMO into a repeatable viral system"
+{instagram_section}  "section15_master_formula": "The reusable 1-paragraph formula for this niche combining Pain+Hope+Proof+Curiosity+Aspiration+FOMO into a repeatable viral system"
 }}"""
 
 

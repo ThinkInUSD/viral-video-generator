@@ -978,12 +978,13 @@ function renderVisuals(d) {
   }).join('')+'</div>';
   html += '<div class="sc"><div class="sc-head"><div class="sc-title">&#128444; Section 5 — Thumbnail Concepts</div></div><div class="sc-body">'+thtml+'</div></div>';
 
-  if (aiPr.midjourney || aiPr.dalle) {
+  if (aiPr.midjourney || aiPr.dalle || aiPr.chatgpt) {
     html += '<div class="sc"><div class="sc-head"><div class="sc-title">&#127947; AI Thumbnail Generator Prompts</div></div><div class="sc-body">';
-    if (aiPr.midjourney) html += promptBox('Midjourney Prompt', aiPr.midjourney);
-    if (aiPr.dalle)      html += promptBox('DALL-E Prompt',     aiPr.dalle);
-    if (aiPr.ideogram)   html += promptBox('Ideogram Prompt',   aiPr.ideogram);
-    if (aiPr.style_guide)html += promptBox('Style Guide',       aiPr.style_guide);
+    if (aiPr.midjourney) html += promptBox('Midjourney Prompt',      aiPr.midjourney);
+    if (aiPr.dalle)      html += promptBox('DALL-E 3 Prompt',        aiPr.dalle);
+    if (aiPr.chatgpt)    html += promptBox('ChatGPT Image Prompt',   aiPr.chatgpt);
+    if (aiPr.ideogram)   html += promptBox('Ideogram Prompt',        aiPr.ideogram);
+    if (aiPr.style_guide)html += promptBox('Style Guide',            aiPr.style_guide);
     html += '</div></div>';
   }
 
@@ -1005,6 +1006,21 @@ function renderVisuals(d) {
   }).join('')+'</div>';
   html += '<div class="sc"><div class="sc-head"><div class="sc-title">&#127917; Section 9 — Visual Storyboard</div>'+
     '<button class="cbtn" onclick="copyStoryboard()">Copy All</button></div><div class="sc-body">'+sbhtml+'</div></div>';
+
+  var igAd = d.instagram_ad_creative || null;
+  if (igAd) {
+    html += '<div class="sc"><div class="sc-head"><div class="sc-title">&#128178; Instagram Ad Creative</div></div><div class="sc-body">';
+    if (igAd.ad_headline)    html += fr('Ad Headline',        igAd.ad_headline,     'lo', true);
+    if (igAd.primary_text)   html += fr('Primary Text',       igAd.primary_text,    'lp', true);
+    if (igAd.cta_button)     html += fr('CTA Button',         igAd.cta_button,      'lg');
+    if (igAd.hook_line)      html += fr('Hook Line (3 sec)',   igAd.hook_line,       'lr', true);
+    if (igAd.visual_concept) html += fr('Visual Concept',     igAd.visual_concept,  'lc');
+    if (igAd.image_prompt)   html += promptBox('Ad Creative Image Prompt (DALL-E / Midjourney)', igAd.image_prompt);
+    if (igAd.story_format)   html += fr('Story Format (9:16)',igAd.story_format,    'lb');
+    if (igAd.caption)        html += fr('Caption + Hashtags', igAd.caption,         'lk', true);
+    if (igAd.targeting_notes)html += fr('Targeting Notes',    igAd.targeting_notes, 'lp');
+    html += '</div></div>';
+  }
 
   document.getElementById('tab-visuals').innerHTML = html;
 }
