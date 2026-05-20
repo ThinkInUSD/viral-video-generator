@@ -546,7 +546,7 @@ async def call_groq(prompt: str, model: str, api_key: str) -> str:
         "max_tokens": 8192,
         "temperature": 0.82,
     }
-    async with httpx.AsyncClient(timeout=180.0) as client:
+    async with httpx.AsyncClient(timeout=120.0) as client:
         resp = await client.post(GROQ_URL, json=payload, headers=headers)
         resp.raise_for_status()
         return resp.json()["choices"][0]["message"]["content"]
@@ -600,16 +600,21 @@ async def generate(request: Request):
     # Generation limit: free/trial users max 10
     is_free_user = False
     gen_count    = 0
-    if user.get("role") != "admin":
-        db_user = get_user_by_email(user["email"])
-        if db_user and db_user.get("trial_expires_at"):
-            is_free_user = True
-            gen_count    = db_user.get("generation_count") or 0
-            if gen_count >= 10:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Generation limit reached ({gen_count}/10). Contact the admin to upgrade your account."
-                )
+    try:
+        if user.get("role") != "admin":
+            db_user = get_user_by_email(user["email"])
+            if db_user and db_user.get("trial_expires_at"):
+                is_free_user = True
+                gen_count    = db_user.get("generation_count") or 0
+                if gen_count >= 10:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Generation limit reached ({gen_count}/10). Contact the admin to upgrade your account."
+                    )
+    except HTTPException:
+        raise
+    except Exception:
+        pass  # DB lookup failure doesn't block generation
 
     # Key priority: request body → user's saved DB key → server GROQ_API_KEY env var
     if not api_key:

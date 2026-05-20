@@ -868,7 +868,11 @@ async function generate() {
       method:'POST', headers: authHeaders(), body: JSON.stringify(body)
     });
     if (res.status === 401) { logout(); return; }
-    if (!res.ok) { var e = await res.json(); throw new Error(e.detail || 'Failed'); }
+    if (!res.ok) {
+      var detail = 'Server error ' + res.status + ' — please try again';
+      try { var errBody = await res.json(); detail = errBody.detail || detail; } catch(_) {}
+      throw new Error(detail);
+    }
     var data = await res.json();
     G.result = data.result;
     if (typeof data.gens_used !== 'undefined') updateGenCounter(data.gens_used, data.gens_limit);
