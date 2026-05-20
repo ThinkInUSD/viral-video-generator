@@ -531,25 +531,40 @@ def parse_json(content: str) -> dict:
         raise ValueError("Could not parse JSON from model response")
 
 
+GROQ_FALLBACK_MODELS = [
+    "llama-3.1-8b-instant",
+    "mixtral-8x7b-32768",
+]
+
 async def call_groq(prompt: str, model: str, api_key: str) -> str:
     key = api_key or GROQ_API_KEY
     if not key:
         raise HTTPException(status_code=503, detail="No API key configured. Admin: add GROQ_API_KEY in Render environment.")
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user",   "content": prompt},
-        ],
-        "response_format": {"type": "json_object"},
-        "max_tokens": 8192,
-        "temperature": 0.82,
-    }
+
+    models_to_try = [model] + [m for m in GROQ_FALLBACK_MODELS if m != model]
+    last_error = None
+
     async with httpx.AsyncClient(timeout=120.0) as client:
-        resp = await client.post(GROQ_URL, json=payload, headers=headers)
-        resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"]
+        for attempt_model in models_to_try:
+            payload = {
+                "model": attempt_model,
+                "messages": [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user",   "content": prompt},
+                ],
+                "response_format": {"type": "json_object"},
+                "max_tokens": 8192,
+                "temperature": 0.82,
+            }
+            resp = await client.post(GROQ_URL, json=payload, headers=headers)
+            if resp.status_code == 429:
+                last_error = f"Rate limit on {attempt_model}, trying next model..."
+                continue
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"]
+
+    raise HTTPException(status_code=429, detail=f"All Groq models are rate-limited. Wait a minute and try again, or upgrade your Groq plan at console.groq.com.")
 
 
 async def call_ollama(prompt: str, model: str) -> str:
