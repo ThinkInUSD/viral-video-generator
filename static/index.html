@@ -312,7 +312,7 @@ a:hover{text-decoration:underline}
   </div>
   <div class="hdr-right">
     <div class="user-pill">&#128100; <span id="userEmail">—</span></div>
-    <button class="settings-btn" onclick="openSettings()">&#9881; API</button>
+    <button class="settings-btn" id="apiSettingsBtn" onclick="openSettings()" style="display:none">&#9881; API</button>
     <button class="logout-btn" onclick="logout()">Sign Out</button>
   </div>
 </header>
@@ -615,6 +615,7 @@ function setupTrialBanner(trialExp) {
 function setupAdminTab() {
   document.getElementById('userEmail').textContent = G.userEmail;
   if (G.userRole === 'admin') {
+    document.getElementById('apiSettingsBtn').style.display = '';
     if (!document.querySelector('.admin-tab')) {
       var t = document.createElement('div');
       t.className = 'tab admin-tab';
