@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViralForge Pro — AI Viral Video Strategy Engine</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg0:#07070f;--bg1:#0f0f1a;--bg2:#161625;--bg3:#1e1e32;
+  --purple:#7c3aed;--pink:#ec4899;--gold:#f59e0b;
+  --green:#10b981;--red:#ef4444;--blue:#60a5fa;--cyan:#22d3ee;
+  --t1:#f1f5f9;--t2:#94a3b8;--t3:#475569;--t4:#334155;
+  --border:#1e293b;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh}
+a{color:#a78bfa;text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* NAV */
+nav{background:rgba(7,7,15,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.nav-logo{display:flex;align-items:center;gap:.5rem}
+.nav-logo-i{width:34px;height:34px;background:linear-gradient(135deg,var(--purple),var(--pink));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.nav-logo h1{font-size:.98rem;font-weight:800;background:linear-gradient(135deg,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-right{display:flex;align-items:center;gap:.6rem}
+.nav-signin{padding:.38rem .9rem;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--t2);font-size:.8rem;cursor:pointer;transition:all .2s}
+.nav-signin:hover{border-color:var(--purple);color:var(--t1)}
+.nav-cta{padding:.38rem .9rem;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;border-radius:8px;color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,58,237,.4)}
+
+/* HERO */
+.hero{padding:5.5rem 1.5rem 4.5rem;text-align:center;max-width:780px;margin:0 auto}
+.hero-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);border-radius:999px;padding:.3rem .9rem;font-size:.72rem;font-weight:600;color:#a78bfa;margin-bottom:1.6rem}
+.hero h1{font-size:clamp(2rem,5.5vw,3.2rem);font-weight:900;line-height:1.15;letter-spacing:-.025em;margin-bottom:1.3rem}
+.hero h1 .grad{background:linear-gradient(135deg,#a78bfa,#f472b6,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:1rem;color:var(--t2);line-height:1.78;max-width:570px;margin:0 auto 2.2rem}
+.hero-btns{display:flex;align-items:center;justify-content:center;gap:.75rem;flex-wrap:wrap}
+.btn-primary{padding:.88rem 2.1rem;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;border-radius:10px;color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .3s}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,58,237,.48)}
+.hero-note{font-size:.74rem;color:var(--t3)}
+
+/* FORMULA STRIP */
+.formula-strip{background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(236,72,153,.07),rgba(34,211,238,.05));border-top:1px solid rgba(124,58,237,.2);border-bottom:1px solid rgba(124,58,237,.2);padding:1.4rem 1.5rem;text-align:center}
+.feq{font-size:clamp(.82rem,2.5vw,1.05rem);font-weight:800;letter-spacing:.02em}
+.fp{color:#f87171}.fh{color:#34d399}.fpr{color:#60a5fa}.fc{color:#fbbf24}.fa{color:#a78bfa}.ff{color:#f472b6}
+.fop{color:var(--t4);margin:0 .38rem;font-weight:400}
+.formula-sub{font-size:.73rem;color:var(--t3);margin-top:.45rem}
+
+/* SECTIONS */
+.section{padding:4.5rem 1.5rem;max-width:1040px;margin:0 auto}
+.section-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--purple);margin-bottom:.55rem;text-align:center}
+.section-title{font-size:clamp(1.35rem,3vw,1.85rem);font-weight:800;text-align:center;margin-bottom:.7rem}
+.section-sub{font-size:.87rem;color:var(--t2);text-align:center;line-height:1.75;max-width:520px;margin:0 auto 2.5rem}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.9rem}
+.feat-card{background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:1.3rem 1.1rem;transition:border-color .2s,transform .2s}
+.feat-card:hover{border-color:rgba(124,58,237,.45);transform:translateY(-2px)}
+.feat-icon{font-size:1.65rem;margin-bottom:.7rem}
+.feat-title{font-size:.87rem;font-weight:700;margin-bottom:.35rem}
+.feat-desc{font-size:.77rem;color:var(--t2);line-height:1.62}
+
+/* PLATFORMS */
+.plat-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:.45rem;margin-top:1.8rem}
+.plat-pill{padding:.38rem .88rem;border:1px solid var(--border);border-radius:999px;font-size:.76rem;font-weight:600;color:var(--t2);background:var(--bg1)}
+
+/* HOW IT WORKS */
+.how-bg{background:var(--bg1);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.steps-wrap{max-width:800px;margin:0 auto;padding:4.5rem 1.5rem}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;margin-top:0}
+.step{text-align:center}
+.step-num{width:44px;height:44px;background:linear-gradient(135deg,var(--purple),var(--pink));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;font-weight:800;color:#fff;margin:0 auto .9rem}
+.step-title{font-size:.9rem;font-weight:700;margin-bottom:.38rem}
+.step-desc{font-size:.79rem;color:var(--t2);line-height:1.65}
+
+/* WHAT YOU GET LIST */
+.checklist{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.55rem;margin-top:0}
+.check-item{display:flex;align-items:flex-start;gap:.55rem;background:var(--bg1);border:1px solid var(--border);border-radius:9px;padding:.75rem .9rem}
+.check-icon{color:var(--green);font-size:.95rem;margin-top:.05rem;flex-shrink:0}
+.check-text{font-size:.81rem;color:var(--t2);line-height:1.55}
+.check-text strong{color:var(--t1)}
+
+/* SIGNUP */
+.signup-bg{background:linear-gradient(180deg,rgba(124,58,237,.06) 0%,transparent 100%);border-top:1px solid var(--border);padding:5rem 1.5rem}
+.signup-box{background:var(--bg1);border:1px solid var(--border);border-radius:18px;padding:2.5rem 2rem;width:100%;max-width:400px;margin:0 auto}
+.signup-head{text-align:center;margin-bottom:1.4rem}
+.signup-head-i{width:52px;height:52px;background:linear-gradient(135deg,var(--purple),var(--pink));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin:0 auto .7rem}
+.signup-head h2{font-size:1.2rem;font-weight:800}
+.signup-head p{font-size:.76rem;color:var(--t3);margin-top:.2rem}
+.trial-badge{display:flex;align-items:center;justify-content:center;gap:.35rem;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:8px;padding:.52rem;font-size:.77rem;font-weight:600;color:#6ee7b7;margin-bottom:1.25rem;text-align:center}
+.fg{display:flex;flex-direction:column;gap:.38rem;margin-bottom:.8rem}
+.fg label{font-size:.66rem;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em}
+.fg input{background:var(--bg0);border:1px solid var(--border);border-radius:8px;padding:.52rem .72rem;color:var(--t1);font-size:.87rem;font-family:inherit;transition:border-color .2s;width:100%}
+.fg input:focus{outline:none;border-color:var(--purple)}
+.signup-btn{width:100%;padding:.82rem;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;border-radius:9px;color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .3s;margin-top:.2rem}
+.signup-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 26px rgba(124,58,237,.45)}
+.signup-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.form-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:.52rem .78rem;font-size:.78rem;color:#fca5a5;display:none;margin-bottom:.75rem}
+.signin-link{text-align:center;font-size:.77rem;color:var(--t3);margin-top:.85rem}
+.signin-link span{color:#a78bfa;cursor:pointer}
+.signin-link span:hover{text-decoration:underline}
+
+/* LOGIN MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg1);border:1px solid var(--border);border-radius:16px;padding:2rem 1.75rem;width:100%;max-width:370px;position:relative}
+.modal h2{font-size:1rem;font-weight:800;text-align:center;margin-bottom:1.25rem}
+.modal-x{position:absolute;top:.85rem;right:.9rem;background:none;border:none;color:var(--t3);font-size:1rem;cursor:pointer;padding:.2rem .4rem;border-radius:4px}
+.modal-x:hover{color:var(--t1)}
+.modal-btn{width:100%;padding:.78rem;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;border-radius:9px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .3s;margin-top:.2rem}
+.modal-btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:1.6rem 1.5rem;text-align:center;font-size:.74rem;color:var(--t3)}
+
+@media(max-width:600px){
+  .hero{padding:3.5rem 1rem 3rem}
+  .section{padding:3rem 1rem}
+  .signup-bg{padding:3rem 1rem}
+  .signup-box{padding:1.75rem 1.25rem}
+  .steps-wrap{padding:3rem 1rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-i">&#127919;</div>
+    <h1>ViralForge Pro</h1>
+  </div>
+  <div class="nav-right">
+    <button class="nav-signin" onclick="openLogin()">Sign In</button>
+    <button class="nav-cta"    onclick="scrollToSignup()">Free Trial &#8594;</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">&#129302; AI-Powered Viral Content Engine</div>
+  <h1>Generate Complete <span class="grad">Viral Video Systems</span><br>In Seconds</h1>
+  <p class="hero-sub">Enter your niche. Get a full 15-section content strategy, word-for-word script, AI thumbnail prompts, storyboard, and editing guide — everything to create videos that actually go viral.</p>
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="scrollToSignup()">Start Free 24-Hour Trial &#8594;</button>
+    <span class="hero-note">No credit card &nbsp;&#183;&nbsp; No commitment &nbsp;&#183;&nbsp; Auto-expires in 24h</span>
+  </div>
+</section>
+
+<!-- FORMULA -->
+<div class="formula-strip">
+  <div class="feq">
+    <span class="fp">PAIN</span><span class="fop">+</span>
+    <span class="fh">HOPE</span><span class="fop">+</span>
+    <span class="fpr">PROOF</span><span class="fop">+</span>
+    <span class="fc">CURIOSITY</span><span class="fop">+</span>
+    <span class="fa">ASPIRATION</span><span class="fop">+</span>
+    <span class="ff">FOMO</span>
+  </div>
+  <div class="formula-sub">The exact dopamine formula engineered into every single output</div>
+</div>
+
+<!-- FEATURES -->
+<section class="section">
+  <div class="section-label">What You Get</div>
+  <h2 class="section-title">15-Section Viral Content System</h2>
+  <p class="section-sub">Every generation delivers a complete execution package — not just ideas, but everything you need to actually produce the video.</p>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon">&#128218;</div>
+      <div class="feat-title">Full A-Z Voiceover Script</div>
+      <div class="feat-desc">Word-for-word script sized to your exact video length. 60 seconds to 20+ minutes. Ready to record, no editing needed.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#127912;</div>
+      <div class="feat-title">AI Thumbnail Prompts</div>
+      <div class="feat-desc">Ready-to-paste prompts for Midjourney, DALL-E, and Ideogram — plus a full style guide with hex colors and fonts.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#129504;</div>
+      <div class="feat-title">Audience Psychology</div>
+      <div class="feat-desc">Deep fears, secret desires, FOMO triggers, late-night thoughts, and the exact reason they click, stay, and subscribe.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#127917;</div>
+      <div class="feat-title">Visual Storyboard</div>
+      <div class="feat-desc">Scene-by-scene breakdown with timestamps, visuals, on-screen text, voiceover line, and audio direction per scene.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#9986;</div>
+      <div class="feat-title">Editing Instructions</div>
+      <div class="feat-desc">Pacing, transitions, music guide, subtitle style, pattern breaks, cinematic effects — fully spelled out for your editor.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#128200;</div>
+      <div class="feat-title">Growth Strategy</div>
+      <div class="feat-desc">Comment triggers, binge architecture, Shorts funnel, content multiplication for Instagram, TikTok, Twitter, and email.</div>
+    </div>
+  </div>
+  <div class="plat-pills">
+    <span class="plat-pill">&#9654; YouTube Long Form</span>
+    <span class="plat-pill">&#9889; YouTube Shorts</span>
+    <span class="plat-pill">&#128247; Instagram Reel</span>
+    <span class="plat-pill">&#127926; TikTok</span>
+    <span class="plat-pill">&#128178; Commercial Ad</span>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="how-bg">
+  <div class="steps-wrap">
+    <div class="section-label" style="text-align:center">Simple Process</div>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">No learning curve. Fill three fields, click one button, get a complete viral system.</p>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Enter Your Niche</div>
+        <div class="step-desc">Type your channel niche and describe your target audience. One sentence each is enough.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Choose Your Settings</div>
+        <div class="step-desc">Pick platform, video length (60s to 20+ min), and the lead emotion you want to trigger.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Get the Full System</div>
+        <div class="step-desc">In seconds, AI returns all 15 sections — strategy, script, thumbnails, storyboard, and more.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHAT YOU GET CHECKLIST -->
+<section class="section">
+  <div class="section-label">Full Breakdown</div>
+  <h2 class="section-title">Everything Inside One Generation</h2>
+  <p class="section-sub" style="margin-bottom:1.75rem">One click. One AI call. Fifteen sections of professional-grade content strategy.</p>
+  <div class="checklist">
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Channel Foundation</strong> — positioning, unique angle, content pillars, ecosystem strategy</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Audience Psychology</strong> — fears, desires, FOMO triggers, binge psychology</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>3 Viral Video Ideas</strong> — Pain + Hope + Proof + Curiosity fully mapped</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>5 Ultra-Clickable Titles</strong> — tested against viral psychology patterns</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>2 Thumbnail Concepts</strong> — with psychology, colors, eye path, text overlay</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>AI Thumbnail Prompts</strong> — Midjourney, DALL-E, Ideogram, + style guide</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>High-Retention Structure</strong> — hook, curiosity loop, pattern interrupt, addictive ending</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Full A-Z Voiceover Script</strong> — word-for-word, sized to your chosen video length</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Editing Guide</strong> — pacing, music, SFX, subtitles, cinematic effects</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Visual Storyboard</strong> — 6 scenes with timestamps, visuals, audio, edit notes</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Comment Trigger CTAs</strong> — exact words to say + psychology behind each</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Binge Strategy</strong> — series architecture, open loops, next-video hooks</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Shorts + Long Form Strategy</strong> — how to build the funnel between them</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>AI Tools Guide</strong> — best free + paid tools per category with usage tips</div></div>
+    <div class="check-item"><div class="check-icon">&#10003;</div><div class="check-text"><strong>Content Multiplication</strong> — Instagram, TikTok, Twitter, community post, email hook</div></div>
+  </div>
+</section>
+
+<!-- SIGNUP -->
+<div class="signup-bg" id="signup-section">
+  <div class="signup-box">
+    <div class="signup-head">
+      <div class="signup-head-i">&#127919;</div>
+      <h2>Start Free Today</h2>
+      <p>24-hour full access — no credit card needed</p>
+    </div>
+    <div class="trial-badge">&#10003;&nbsp; Full access &nbsp;&#183;&nbsp; 24 hours &nbsp;&#183;&nbsp; Auto-expires &nbsp;&#183;&nbsp; No card required</div>
+    <div class="form-err" id="signupErr"></div>
+    <div class="fg">
+      <label>Email</label>
+      <input id="signupEmail" type="email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doSignup()" />
+    </div>
+    <div class="fg">
+      <label>Password</label>
+      <input id="signupPw" type="password" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')doSignup()" />
+    </div>
+    <div class="fg">
+      <label>Confirm Password</label>
+      <input id="signupPw2" type="password" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSignup()" />
+    </div>
+    <button class="signup-btn" id="signupBtn" onclick="doSignup()">Create Free Account &#8594;</button>
+    <div class="signin-link">Already have an account? <span onclick="openLogin()">Sign In</span></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <strong style="color:var(--t2)">ViralForge Pro</strong> &nbsp;&#183;&nbsp; AI Viral Content Engine
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-bg" id="loginModal">
+  <div class="modal">
+    <button class="modal-x" onclick="closeLogin()">&#10005;</button>
+    <h2>&#127919; Sign In to ViralForge</h2>
+    <div class="form-err" id="loginErr"></div>
+    <div class="fg">
+      <label>Email</label>
+      <input id="loginEmail" type="email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <div class="fg" style="margin-bottom:.9rem">
+      <label>Password</label>
+      <input id="loginPw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="modal-btn" id="loginBtn" onclick="doLogin()">Sign In &#8594;</button>
+    <div class="signin-link" style="margin-top:.75rem">No account? <span onclick="closeLogin();scrollToSignup()">Start free trial</span></div>
+  </div>
+</div>
+
+<script>
+// If already logged in with a valid token → go straight to app
+(function(){
+  var token = localStorage.getItem('vf_token');
+  if (!token) return;
+  try {
+    var p = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    if (p && p.exp * 1000 > Date.now()) window.location.href = '/app';
+  } catch(e) {}
+})();
+
+function scrollToSignup() {
+  document.getElementById('signup-section').scrollIntoView({behavior:'smooth'});
+}
+function openLogin() {
+  document.getElementById('loginModal').classList.add('open');
+  setTimeout(function(){ document.getElementById('loginEmail').focus(); }, 80);
+}
+function closeLogin() {
+  document.getElementById('loginModal').classList.remove('open');
+}
+document.getElementById('loginModal').addEventListener('click', function(e){
+  if (e.target === this) closeLogin();
+});
+
+async function doSignup() {
+  var email = document.getElementById('signupEmail').value.trim();
+  var pw    = document.getElementById('signupPw').value;
+  var pw2   = document.getElementById('signupPw2').value;
+  var btn   = document.getElementById('signupBtn');
+  showErr('signupErr', '');
+  if (!email || !pw)   { showErr('signupErr', 'Enter your email and password'); return; }
+  if (pw.length < 6)   { showErr('signupErr', 'Password must be at least 6 characters'); return; }
+  if (pw !== pw2)      { showErr('signupErr', 'Passwords do not match'); return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    var res = await fetch('/auth/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email:email, password:pw})
+    });
+    var d = await res.json();
+    if (!res.ok) { showErr('signupErr', d.detail || 'Registration failed'); return; }
+    localStorage.setItem('vf_token', d.token);
+    window.location.href = '/app';
+  } catch(e) {
+    showErr('signupErr', 'Connection error — please try again');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Free Account →';
+  }
+}
+
+async function doLogin() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var pw    = document.getElementById('loginPw').value;
+  var btn   = document.getElementById('loginBtn');
+  showErr('loginErr', '');
+  if (!email || !pw) { showErr('loginErr', 'Enter email and password'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    var res = await fetch('/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email:email, password:pw})
+    });
+    var d = await res.json();
+    if (!res.ok) { showErr('loginErr', d.detail || 'Login failed'); return; }
+    localStorage.setItem('vf_token', d.token);
+    window.location.href = '/app';
+  } catch(e) {
+    showErr('loginErr', 'Connection error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In →';
+  }
+}
+
+function showErr(id, msg) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!msg) { el.style.display = 'none'; return; }
+  el.textContent = msg; el.style.display = 'block';
+}
+</script>
+</body>
+</html>

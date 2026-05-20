@@ -14,14 +14,21 @@ def init_db():
     conn = get_db()
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            email       TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role        TEXT DEFAULT 'user',
-            active      INTEGER DEFAULT 1,
-            created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            email            TEXT UNIQUE NOT NULL,
+            password_hash    TEXT NOT NULL,
+            role             TEXT DEFAULT 'user',
+            active           INTEGER DEFAULT 1,
+            trial_expires_at TIMESTAMP DEFAULT NULL,
+            created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    # Migration: add trial_expires_at to existing tables that don't have it
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN trial_expires_at TIMESTAMP DEFAULT NULL")
+        conn.commit()
+    except Exception:
+        pass
     conn.execute("""
         CREATE TABLE IF NOT EXISTS api_keys (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,18 +53,18 @@ def get_user_by_email(email: str):
 def get_all_users():
     conn = get_db()
     rows = conn.execute(
-        "SELECT id, email, role, active, created_at FROM users ORDER BY created_at"
+        "SELECT id, email, role, active, trial_expires_at, created_at FROM users ORDER BY created_at"
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 
-def create_user(email: str, password_hash: str, role: str = "user") -> bool:
+def create_user(email: str, password_hash: str, role: str = "user", trial_expires_at=None) -> bool:
     conn = get_db()
     try:
         conn.execute(
-            "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
-            (email.lower(), password_hash, role),
+            "INSERT INTO users (email, password_hash, role, trial_expires_at) VALUES (?, ?, ?, ?)",
+            (email.lower(), password_hash, role, trial_expires_at),
         )
         conn.commit()
         return True

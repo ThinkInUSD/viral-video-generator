@@ -44,13 +44,26 @@ def hash_pw(password: str) -> str:
 def check_pw(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
-def make_token(user_id: int, email: str, role: str) -> str:
+def make_token(user_id: int, email: str, role: str, trial_expires_at=None) -> str:
+    jwt_exp   = datetime.now(timezone.utc) + timedelta(days=7)
+    trial_exp = None
+    if trial_expires_at:
+        try:
+            trial_dt  = datetime.fromisoformat(str(trial_expires_at))
+            if trial_dt.tzinfo is None:
+                trial_dt = trial_dt.replace(tzinfo=timezone.utc)
+            jwt_exp   = min(jwt_exp, trial_dt)
+            trial_exp = int(trial_dt.timestamp())
+        except Exception:
+            pass
     payload = {
-        "sub": str(user_id),
+        "sub":   str(user_id),
         "email": email,
-        "role": role,
-        "exp": datetime.now(timezone.utc) + timedelta(days=7),
+        "role":  role,
+        "exp":   jwt_exp,
     }
+    if trial_exp:
+        payload["trial_exp"] = trial_exp
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 def decode_token(token: str) -> dict:
@@ -81,9 +94,26 @@ def mask_key(k: str) -> str:
 ALLOWED_PROVIDERS = {"groq", "openai", "anthropic", "elevenlabs"}
 
 # ── Auth endpoints ────────────────────────────────────────────────────────────
+@app.post("/auth/register")
+async def register(request: Request):
+    body     = await request.json()
+    email    = body.get("email", "").lower().strip()
+    password = body.get("password", "")
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password required")
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    trial_expires_at = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+    success = create_user(email, hash_pw(password), "user", trial_expires_at)
+    if not success:
+        raise HTTPException(status_code=409, detail="That email is already registered")
+    user  = get_user_by_email(email)
+    token = make_token(user["id"], user["email"], user["role"], trial_expires_at)
+    return {"token": token, "email": user["email"], "role": user["role"], "trial_expires_at": trial_expires_at}
+
 @app.post("/auth/login")
 async def login(request: Request):
-    body = await request.json()
+    body     = await request.json()
     email    = body.get("email", "").lower().strip()
     password = body.get("password", "")
     if not email or not password:
@@ -93,8 +123,22 @@ async def login(request: Request):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if not user["active"]:
         raise HTTPException(status_code=403, detail="Account is disabled")
-    token = make_token(user["id"], user["email"], user["role"])
-    return {"token": token, "email": user["email"], "role": user["role"]}
+    # Check trial expiry — delete account and block if expired
+    trial_exp = user.get("trial_expires_at")
+    if trial_exp:
+        try:
+            exp_dt = datetime.fromisoformat(str(trial_exp))
+            if exp_dt.tzinfo is None:
+                exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+            if exp_dt < datetime.now(timezone.utc):
+                delete_user(user["id"])
+                raise HTTPException(status_code=403, detail="Your 24-hour free trial has expired.")
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+    token = make_token(user["id"], user["email"], user["role"], trial_exp)
+    return {"token": token, "email": user["email"], "role": user["role"], "trial_expires_at": trial_exp}
 
 # ── Admin endpoints ───────────────────────────────────────────────────────────
 @app.get("/admin/users")
@@ -478,6 +522,10 @@ async def call_ollama(prompt: str, model: str) -> str:
 # ── Routes ────────────────────────────────────────────────────────────────────
 @app.get("/")
 async def root():
+    return FileResponse("static/landing.html")
+
+@app.get("/app")
+async def app_page():
     return FileResponse("static/index.html")
 
 
