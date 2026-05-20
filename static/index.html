@@ -799,7 +799,7 @@ async function generate() {
 
   if (!niche)    { toast('Enter a channel niche'); return; }
   if (!audience) { toast('Describe your target audience'); return; }
-  if (G.provider === 'groq' && !G.groqKey && !G.savedKeys.groq) { openSettings(); toast('Add your Groq API key first'); return; }
+  if (G.userRole === 'admin' && G.provider === 'groq' && !G.groqKey && !G.savedKeys.groq) { openSettings(); toast('Add your Groq API key first'); return; }
 
   var btn = document.getElementById('genBtn');
   btn.disabled = true; document.getElementById('genTxt').textContent = 'Generating...';
