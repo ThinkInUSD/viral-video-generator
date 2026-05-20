@@ -1,32 +1,94 @@
 import os
 import sqlite3
+import httpx
 
 TURSO_URL   = os.getenv("TURSO_URL", "")
 TURSO_TOKEN = os.getenv("TURSO_TOKEN", "")
 DB_PATH     = os.getenv("DB_PATH", "/tmp/viralforge.db")
 
 
+# ── Turso HTTP adapter ────────────────────────────────────────────────────────
+
+class _Rows:
+    """Wraps Turso API results to behave like sqlite3 cursor."""
+    def __init__(self, cols, raw_rows):
+        self._rows = []
+        for raw in raw_rows:
+            row = {}
+            for i, col in enumerate(cols):
+                cell = raw[i]
+                row[col] = None if cell["type"] == "null" else cell["value"]
+            self._rows.append(row)
+
+    def fetchone(self):
+        return self._rows[0] if self._rows else None
+
+    def fetchall(self):
+        return self._rows
+
+
+class TursoConn:
+    """Drop-in sqlite3 replacement using Turso HTTP API."""
+    def __init__(self, url, token):
+        self._url = url.replace("libsql://", "https://") + "/v2/pipeline"
+        self._headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+    def _encode(self, v):
+        if v is None:
+            return {"type": "null", "value": None}
+        if isinstance(v, int):
+            return {"type": "integer", "value": str(v)}
+        if isinstance(v, float):
+            return {"type": "float", "value": v}
+        return {"type": "text", "value": str(v)}
+
+    def execute(self, sql, params=()):
+        payload = {
+            "requests": [
+                {
+                    "type": "execute",
+                    "stmt": {
+                        "sql": sql,
+                        "args": [self._encode(p) for p in params],
+                    },
+                },
+                {"type": "close"},
+            ]
+        }
+        resp = httpx.post(self._url, json=payload, headers=self._headers, timeout=30.0)
+        resp.raise_for_status()
+        item = resp.json()["results"][0]
+        if item["type"] == "error":
+            msg = item.get("error", {}).get("message", "DB error")
+            if "UNIQUE" in msg or "SQLITE_CONSTRAINT" in msg:
+                raise sqlite3.IntegrityError(msg)
+            raise Exception(msg)
+        result = item["response"]["result"]
+        cols   = [c["name"] for c in result["cols"]]
+        return _Rows(cols, result["rows"])
+
+    def commit(self): pass   # Turso auto-commits each statement
+    def close(self):  pass
+
+
+# ── Connection factory ────────────────────────────────────────────────────────
+
 def get_db():
     if TURSO_URL and TURSO_TOKEN:
-        import libsql_experimental as libsql
-        conn = libsql.connect(
-            database=DB_PATH,
-            sync_url=TURSO_URL,
-            auth_token=TURSO_TOKEN,
-        )
-        conn.sync()
-    else:
-        conn = sqlite3.connect(DB_PATH)
+        return TursoConn(TURSO_URL, TURSO_TOKEN)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def _commit(conn):
-    """Commit and sync to Turso if configured."""
-    conn.commit()
-    if TURSO_URL and TURSO_TOKEN:
-        conn.sync()
+    conn.commit()   # no-op for TursoConn, real commit for sqlite3
 
+
+# ── Schema ────────────────────────────────────────────────────────────────────
 
 def init_db():
     conn = get_db()
@@ -60,9 +122,11 @@ def init_db():
     conn.close()
 
 
+# ── Users ─────────────────────────────────────────────────────────────────────
+
 def get_user_by_email(email: str):
     conn = get_db()
-    row = conn.execute("SELECT * FROM users WHERE email = ?", (email.lower(),)).fetchone()
+    row  = conn.execute("SELECT * FROM users WHERE email = ?", (email.lower(),)).fetchone()
     conn.close()
     return dict(row) if row else None
 
@@ -92,7 +156,7 @@ def create_user(email: str, password_hash: str, role: str = "user", trial_expire
 
 
 def upsert_admin(email: str, password_hash: str):
-    conn = get_db()
+    conn     = get_db()
     existing = conn.execute("SELECT id FROM users WHERE email = ?", (email.lower(),)).fetchone()
     if existing:
         conn.execute(
@@ -131,6 +195,8 @@ def update_password(user_id: int, password_hash: str):
     _commit(conn)
     conn.close()
 
+
+# ── API keys ──────────────────────────────────────────────────────────────────
 
 def get_user_api_keys(user_id: int) -> dict:
     conn = get_db()
