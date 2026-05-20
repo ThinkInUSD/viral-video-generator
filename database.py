@@ -1,13 +1,31 @@
-import sqlite3
 import os
+import sqlite3
 
-DB_PATH = os.getenv("DB_PATH", "/tmp/viralforge.db")
+TURSO_URL   = os.getenv("TURSO_URL", "")
+TURSO_TOKEN = os.getenv("TURSO_TOKEN", "")
+DB_PATH     = os.getenv("DB_PATH", "/tmp/viralforge.db")
 
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    if TURSO_URL and TURSO_TOKEN:
+        import libsql_experimental as libsql
+        conn = libsql.connect(
+            database=DB_PATH,
+            sync_url=TURSO_URL,
+            auth_token=TURSO_TOKEN,
+        )
+        conn.sync()
+    else:
+        conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def _commit(conn):
+    """Commit and sync to Turso if configured."""
+    conn.commit()
+    if TURSO_URL and TURSO_TOKEN:
+        conn.sync()
 
 
 def init_db():
@@ -23,10 +41,9 @@ def init_db():
             created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    # Migration: add trial_expires_at to existing tables that don't have it
     try:
         conn.execute("ALTER TABLE users ADD COLUMN trial_expires_at TIMESTAMP DEFAULT NULL")
-        conn.commit()
+        _commit(conn)
     except Exception:
         pass
     conn.execute("""
@@ -39,7 +56,7 @@ def init_db():
             UNIQUE(user_id, provider)
         )
     """)
-    conn.commit()
+    _commit(conn)
     conn.close()
 
 
@@ -66,7 +83,7 @@ def create_user(email: str, password_hash: str, role: str = "user", trial_expire
             "INSERT INTO users (email, password_hash, role, trial_expires_at) VALUES (?, ?, ?, ?)",
             (email.lower(), password_hash, role, trial_expires_at),
         )
-        conn.commit()
+        _commit(conn)
         return True
     except sqlite3.IntegrityError:
         return False
@@ -75,7 +92,6 @@ def create_user(email: str, password_hash: str, role: str = "user", trial_expire
 
 
 def upsert_admin(email: str, password_hash: str):
-    """Create admin if not exists, or update their password hash."""
     conn = get_db()
     existing = conn.execute("SELECT id FROM users WHERE email = ?", (email.lower(),)).fetchone()
     if existing:
@@ -88,14 +104,14 @@ def upsert_admin(email: str, password_hash: str):
             "INSERT INTO users (email, password_hash, role, active) VALUES (?, ?, 'admin', 1)",
             (email.lower(), password_hash),
         )
-    conn.commit()
+    _commit(conn)
     conn.close()
 
 
 def delete_user(user_id: int):
     conn = get_db()
     conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    conn.commit()
+    _commit(conn)
     conn.close()
 
 
@@ -105,14 +121,14 @@ def toggle_user_active(user_id: int):
         "UPDATE users SET active = CASE WHEN active = 1 THEN 0 ELSE 1 END WHERE id = ?",
         (user_id,),
     )
-    conn.commit()
+    _commit(conn)
     conn.close()
 
 
 def update_password(user_id: int, password_hash: str):
     conn = get_db()
     conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
-    conn.commit()
+    _commit(conn)
     conn.close()
 
 
@@ -133,7 +149,7 @@ def save_api_key(user_id: int, provider: str, api_key: str):
         "updated_at = CURRENT_TIMESTAMP",
         (user_id, provider, api_key),
     )
-    conn.commit()
+    _commit(conn)
     conn.close()
 
 
@@ -142,5 +158,5 @@ def delete_api_key(user_id: int, provider: str):
     conn.execute(
         "DELETE FROM api_keys WHERE user_id = ? AND provider = ?", (user_id, provider)
     )
-    conn.commit()
+    _commit(conn)
     conn.close()
